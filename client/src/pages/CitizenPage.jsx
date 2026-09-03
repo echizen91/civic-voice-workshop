@@ -32,8 +32,12 @@ export function CitizenPage({ user }) {
         <p>Tell us about an issue, an idea, or a positive experience in your community.</p>
       </div>
       <section className="form-card">
-        {submitted && <div className="success-banner">Thank you. Your feedback has been received.</div>}
-        <form onSubmit={handleSubmit}>
+        {submitted ? (
+          <div className="success-banner">
+            <p>Thank you. Your feedback has been received.</p>
+            <button className="primary-button" type="button" onClick={() => setSubmitted(false)}>Submit another</button>
+          </div>
+        ) : <form onSubmit={handleSubmit}>
           <label>Your feedback
             <textarea
               rows="7"
@@ -48,7 +52,7 @@ export function CitizenPage({ user }) {
             <button className="primary-button">Submit feedback</button>
           </div>
           {error && <p className="error-message">{error}</p>}
-        </form>
+        </form>}
       </section>
     </main>
   );
