@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { AdminPage } from "./pages/AdminPage";
 import { CitizenPage } from "./pages/CitizenPage";
@@ -31,7 +31,31 @@ export default function App() {
 
   return (
     <>
-      <Header user={session?.user} onLogout={handleLogout} />
+const THEME_STORAGE_KEY = "civic-voice-theme";
+
+function getInitialTheme() {
+  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+export default function App() {
+  const [session, setSession] = useState(readSession);
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  return (
+    <>
+      <Header
+        user={session?.user}
+        onLogout={handleLogout}
+        theme={theme}
+        onToggleTheme={() => setTheme((currentTheme) => currentTheme === "dark" ? "light" : "dark")}
+      />
       {!session && <LoginPage onLogin={handleLogin} />}
       {session?.user.role === "citizen" && <CitizenPage user={session.user} />}
       {session?.user.role === "admin" && <AdminPage user={session.user} />}
