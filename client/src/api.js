@@ -6,7 +6,7 @@ async function api(path, options = {}) {
     ...options,
   });
   const body = await response.json();
-  if (!response.ok) throw new Error(body.error ?? "Something went wrong.");
+  if (!response.ok) throw new Error(body.error?.message ?? "Something went wrong.");
   return body;
 }
 
