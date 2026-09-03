@@ -8,9 +8,13 @@ function sendError(res, status, code, message) {
   return res.status(status).json({ error: { code, message } });
 }
 
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const MAX_FAILED_LOGINS = 5;
+
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
   const sessions = new Map();
+  const failedLogins = new Map();
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -24,7 +28,16 @@ export async function createApp(options = {}) {
     const user = db.data.users.find(
       (candidate) => candidate.nric === nric && verifyPassword(password, candidate.passwordHash) && candidate.role === role,
     );
-    if (!user) return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid NRIC, password, or sign-in mode.");
+    if (!user) {
+      const now = Date.now();
+      const record = failedLogins.get(nric);
+      const attempts = !record || record.resetAt <= now ? 1 : record.attempts + 1;
+      failedLogins.set(nric, { attempts, resetAt: now + LOGIN_WINDOW_MS });
+      if (attempts > MAX_FAILED_LOGINS) return sendError(res, 429, "RATE_LIMITED", "Too many failed sign-in attempts. Try again later.");
+      return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid NRIC, password, or sign-in mode.");
+    }
+
+    failedLogins.delete(nric);
 
     const token = crypto.randomBytes(32).toString("base64url");
     sessions.set(token, { nric: user.nric, name: user.name, role: user.role });
