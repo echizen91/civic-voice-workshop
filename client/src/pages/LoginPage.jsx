@@ -47,8 +47,8 @@ export function LoginPage({ onLogin }) {
           <h2>Welcome to CivicVoice</h2>
           <p className="muted">Use your NRIC and password to continue.</p>
           <div className="role-switch" role="tablist" aria-label="Sign-in mode">
-            <button className={role === "citizen" ? "active" : ""} onClick={() => setRole("citizen")} type="button">Public</button>
-            <button className={role === "admin" ? "active" : ""} onClick={() => setRole("admin")} type="button">Admin</button>
+            <button className={role === "citizen" ? "active" : ""} aria-selected={role === "citizen"} onClick={() => setRole("citizen")} type="button">Public</button>
+            <button className={role === "admin" ? "active" : ""} aria-selected={role === "admin"} onClick={() => setRole("admin")} type="button">Admin</button>
           </div>
           <form onSubmit={handleSubmit}>
             <label>NRIC
@@ -57,7 +57,7 @@ export function LoginPage({ onLogin }) {
             <label>Password
               <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password" />
             </label>
-            {error && <p className="error-message">{error}</p>}
+            {error && <p className="error-message" role="alert">{error}</p>}
             <button className="primary-button" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
           </form>
           <details className="demo-help">

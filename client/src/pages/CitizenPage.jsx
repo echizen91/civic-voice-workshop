@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { submitFeedback } from "../api";
 
 const MESSAGE_LIMIT = 500;
@@ -7,6 +7,11 @@ export function CitizenPage({ user }) {
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const successRef = useRef(null);
+
+  useEffect(() => {
+    if (submitted) successRef.current?.focus();
+  }, [submitted]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -33,7 +38,7 @@ export function CitizenPage({ user }) {
       </div>
       <section className="form-card">
         {submitted ? (
-          <div className="success-banner">
+          <div className="success-banner" ref={successRef} tabIndex="-1" role="status">
             <p>Thank you. Your feedback has been received.</p>
             <button className="primary-button" type="button" onClick={() => setSubmitted(false)}>Submit another</button>
           </div>
@@ -45,13 +50,14 @@ export function CitizenPage({ user }) {
               value={message}
               onChange={(event) => setMessage(event.target.value.slice(0, MESSAGE_LIMIT))}
               placeholder="Share your feedback here..."
+              aria-describedby="feedback-help"
             />
           </label>
           <div className="form-footer">
-            <span className="muted">{message.length} / {MESSAGE_LIMIT} characters. Please do not include sensitive personal information.</span>
+            <span className="muted" id="feedback-help">{message.length} / {MESSAGE_LIMIT} characters. Please do not include sensitive personal information.</span>
             <button className="primary-button">Submit feedback</button>
           </div>
-          {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message" role="alert">{error}</p>}
         </form>}
       </section>
     </main>
