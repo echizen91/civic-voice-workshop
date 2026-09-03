@@ -4,6 +4,10 @@ import cors from "cors";
 import { createDb } from "./lib/db.js";
 import { verifyPassword } from "./lib/passwords.js";
 
+function sendError(res, status, code, message) {
+  return res.status(status).json({ error: { code, message } });
+}
+
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
   const sessions = new Map();
@@ -20,7 +24,7 @@ export async function createApp(options = {}) {
     const user = db.data.users.find(
       (candidate) => candidate.nric === nric && verifyPassword(password, candidate.passwordHash) && candidate.role === role,
     );
-    if (!user) return res.status(401).json({ error: "Invalid NRIC, password, or sign-in mode." });
+    if (!user) return sendError(res, 401, "INVALID_CREDENTIALS", "Invalid NRIC, password, or sign-in mode.");
 
     const token = crypto.randomBytes(32).toString("base64url");
     sessions.set(token, { nric: user.nric, name: user.name, role: user.role });
@@ -31,7 +35,7 @@ export async function createApp(options = {}) {
     const token = req.header("authorization")?.replace(/^Bearer\s+/i, "");
     const session = token && sessions.get(token);
     if (session?.role !== "admin") {
-      return res.status(403).json({ error: "Admin access required." });
+      return sendError(res, 403, "FORBIDDEN", "Admin access required.");
     }
     req.session = session;
     next();
@@ -43,7 +47,7 @@ export async function createApp(options = {}) {
 
   app.post("/api/feedback", async (req, res) => {
     const { nric, name, message } = req.body ?? {};
-    if (!message) return res.status(400).json({ error: "Please enter feedback." });
+    if (!message) return sendError(res, 400, "VALIDATION_ERROR", "Please enter feedback.");
     const feedback = {
       id: crypto.randomUUID(), nric, name, message, category: "General", status: "New",
       createdAt: new Date().toISOString(),
@@ -52,6 +56,8 @@ export async function createApp(options = {}) {
     await db.write();
     return res.status(201).json({ feedback });
   });
+
+  app.use("/api", (_req, res) => sendError(res, 404, "NOT_FOUND", "API route not found."));
 
   return app;
 }

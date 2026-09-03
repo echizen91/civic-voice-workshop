@@ -47,6 +47,15 @@ describe("CivicVoice baseline API", () => {
     const app = await testApp();
     const response = await request(app).get("/api/feedback").set("x-user-role", "admin");
     expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("FORBIDDEN");
+  });
+
+  it("uses the structured error contract for validation and unknown API routes", async () => {
+    const app = await testApp();
+    const validation = await request(app).post("/api/feedback").send({});
+    const missing = await request(app).get("/api/missing");
+    expect(validation.body.error).toEqual({ code: "VALIDATION_ERROR", message: "Please enter feedback." });
+    expect(missing.body.error.code).toBe("NOT_FOUND");
   });
 
   it("allows an authenticated admin to read the feedback list", async () => {
