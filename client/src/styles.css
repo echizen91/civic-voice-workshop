@@ -62,4 +62,9 @@ textarea { resize: vertical; line-height: 1.6; }
   .signed-in { display: none; }
   .form-footer { align-items: stretch; flex-direction: column; }
   .form-footer .primary-button { width: 100%; }
+  .admin-shell { padding: 46px 16px; }
+  .feedback-list { padding: 20px 16px; }
+  .feedback-row { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .feedback-row p { overflow-wrap: anywhere; }
+  .status-pill { align-self: flex-start; }
 }
