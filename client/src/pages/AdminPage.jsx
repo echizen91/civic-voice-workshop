@@ -5,6 +5,7 @@ export function AdminPage({ user }) {
   const [feedback, setFeedback] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   async function loadFeedback() {
     setLoading(true);
@@ -23,6 +24,11 @@ export function AdminPage({ user }) {
     loadFeedback();
   }, [user]);
 
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const visibleFeedback = normalizedQuery
+    ? feedback.filter((item) => `${item.name} ${item.message}`.toLocaleLowerCase().includes(normalizedQuery))
+    : feedback;
+
   return (
     <main className="page-shell admin-shell">
       <div className="page-heading">
@@ -37,16 +43,21 @@ export function AdminPage({ user }) {
         </section>
       ) : feedback.length === 0 ? <p className="muted">No feedback has been received yet.</p> : (
         <section className="feedback-list">
-          <div className="list-header"><strong>Latest feedback</strong><span>{feedback.length} items</span></div>
-          {feedback.map((item) => (
-            <article className="feedback-row" key={item.id}>
-              <div>
-                <div className="feedback-meta">{item.name} · {new Date(item.createdAt).toLocaleDateString()}</div>
-                <p>{item.message}</p>
-              </div>
-              <span className="status-pill">{item.status}</span>
-            </article>
-          ))}
+          <div className="list-header"><strong>Latest feedback</strong><span>{visibleFeedback.length} items</span></div>
+        <label>
+          Search feedback
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search messages or names" />
+        </label>
+        {visibleFeedback.length === 0 && <p className="muted">{normalizedQuery ? "No feedback matches your search." : "No feedback has been received yet."}</p>}
+        {visibleFeedback.map((item) => (
+          <article className="feedback-row" key={item.id}>
+            <div>
+              <div className="feedback-meta">{item.name} · {new Date(item.createdAt).toLocaleDateString()}</div>
+              <p>{item.message}</p>
+            </div>
+            <span className="status-pill">{item.status}</span>
+          </article>
+        ))}
         </section>
       )}
     </main>
