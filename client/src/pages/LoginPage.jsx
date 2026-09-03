@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { login } from "../api";
 
+const NRIC_PATTERN = /^[STFG]\d{7}[A-Z]$/;
+
 export function LoginPage({ onLogin }) {
   const [role, setRole] = useState("citizen");
   const [nric, setNric] = useState("");
@@ -10,10 +12,16 @@ export function LoginPage({ onLogin }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    const normalizedNric = nric.trim().toUpperCase();
+    if (!NRIC_PATTERN.test(normalizedNric)) {
+      setError("Enter a valid NRIC-like ID, for example S0000001A.");
+      return;
+    }
+
     setBusy(true);
     setError("");
     try {
-      const session = await login({ nric, password, role });
+      const session = await login({ nric: normalizedNric, password, role });
       onLogin(session);
     } catch (requestError) {
       setError(requestError.message);
