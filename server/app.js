@@ -6,6 +6,7 @@ import { verifyPassword } from "./lib/passwords.js";
 
 export async function createApp(options = {}) {
   const db = options.db ?? (await createDb());
+  const sessions = new Map();
   const app = express();
   app.use(cors());
   app.use(express.json());
@@ -21,15 +22,22 @@ export async function createApp(options = {}) {
     );
     if (!user) return res.status(401).json({ error: "Invalid NRIC, password, or sign-in mode." });
 
-    // Workshop baseline only: this is deliberately not a production session.
-    const token = Buffer.from(`${user.nric}:${user.role}`).toString("base64");
+    const token = crypto.randomBytes(32).toString("base64url");
+    sessions.set(token, { nric: user.nric, name: user.name, role: user.role });
     return res.json({ token, user: { nric: user.nric, name: user.name, role: user.role } });
   });
 
-  app.get("/api/feedback", (req, res) => {
-    if (req.header("x-user-role") !== "admin") {
+  function requireAdmin(req, res, next) {
+    const token = req.header("authorization")?.replace(/^Bearer\s+/i, "");
+    const session = token && sessions.get(token);
+    if (session?.role !== "admin") {
       return res.status(403).json({ error: "Admin access required." });
     }
+    req.session = session;
+    next();
+  }
+
+  app.get("/api/feedback", requireAdmin, (_req, res) => {
     return res.json({ feedback: db.data.feedback });
   });
 

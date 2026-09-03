@@ -58,7 +58,7 @@ export default function App() {
       />
       {!session && <LoginPage onLogin={handleLogin} />}
       {session?.user.role === "citizen" && <CitizenPage user={session.user} />}
-      {session?.user.role === "admin" && <AdminPage user={session.user} />}
+      {session?.user.role === "admin" && <AdminPage user={session.user} token={session.token} />}
     </>
   );
 }
