@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getFeedback } from "../api";
 
-export function AdminPage({ user }) {
+export function AdminPage({ user, token }) {
   const [feedback, setFeedback] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -11,7 +11,7 @@ export function AdminPage({ user }) {
     setLoading(true);
     setError("");
     try {
-      const response = await getFeedback(user);
+      const response = await getFeedback(token);
       setFeedback(response.feedback);
     } catch (requestError) {
       setError(requestError.message);
@@ -22,7 +22,7 @@ export function AdminPage({ user }) {
 
   useEffect(() => {
     loadFeedback();
-  }, [user]);
+  }, [token]);
 
   const normalizedQuery = query.trim().toLocaleLowerCase();
   const visibleFeedback = normalizedQuery

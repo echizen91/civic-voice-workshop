@@ -43,9 +43,18 @@ describe("CivicVoice baseline API", () => {
     expect(response.body.feedback.message).toBe("Please add more benches.");
   });
 
-  it("blocks the feedback list without the admin role header", async () => {
+  it("blocks the feedback list when a citizen forges the old role header", async () => {
     const app = await testApp();
-    const response = await request(app).get("/api/feedback");
+    const response = await request(app).get("/api/feedback").set("x-user-role", "admin");
     expect(response.status).toBe(403);
+  });
+
+  it("allows an authenticated admin to read the feedback list", async () => {
+    const app = await testApp();
+    const login = await request(app).post("/api/login").send({
+      nric: "S0000002B", password: "admin123", role: "admin",
+    });
+    const response = await request(app).get("/api/feedback").set("authorization", `Bearer ${login.body.token}`);
+    expect(response.status).toBe(200);
   });
 });
